@@ -5,7 +5,12 @@ import logging
 main_setup = dict(
     sample_rate=1000,  # Hz
     interval=40,  # milliseconds
-    channels=64  # channels
+    channels=64,  # channels
+)
+
+server_setup = dict(
+    host='localhost',
+    port=23333
 )
 
 # %%
