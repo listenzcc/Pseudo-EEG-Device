@@ -11,9 +11,49 @@ import time
 import socket
 import threading
 import traceback
+import pandas as pd
 
 from main_setup import server_setup, logger
 from coding_toolbox import decode_header, decode_package
+
+# %%
+
+
+class DataSet(object):
+    ''' Main dataset of the Pseudo EEG Device Signal '''
+
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        ''' Reset the dataset '''
+        self.dataset = []
+
+    def append(self, n, q, q2, data):
+        '''
+        Append the signal into the dataset
+
+        Args:
+            param: n: The count of the signal segment;
+            param: q: The timestamp of the signal segment;
+            param: q2: The timestamp of receiving the signal segment
+            param: data: The 2D array of the signal segment
+        '''
+        self.dataset.append((n, q, q2, data))
+
+    def dataframe(self):
+        '''
+        Convert the dataset into the dataframe
+
+        Return:
+            return: df: The dataframe of the dataset
+        '''
+        df = pd.DataFrame(self.dataset, columns=['n', 'q', 'q2', 'data'])
+        df['diff'] = df['q2'] - df['q']
+
+        df = df[['n', 'diff', 'q', 'q2', 'data']]
+        return df
+
 
 # %%
 
@@ -29,11 +69,15 @@ class SocketClient(object):
         ''' Connect to the server '''
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.connect((self.host, self.port))
-        self.receive()
         logger.info('Connected to {}:{}'.format(self.host, self.port))
 
-    def receive(self):
-        ''' Keep receiving the data from the server '''
+    def receive(self, dataset=None):
+        '''
+        Keep receiving the data from the server
+
+        Args:
+            param: dataset: The dataset restoring the data
+        '''
 
         self.keep_receiving = True
 
@@ -42,7 +86,7 @@ class SocketClient(object):
 
             try:
                 while self.keep_receiving:
-                    buffer = self.client.recv(1024)
+                    buffer = self.client.recv(80)
                     if buffer.startswith(b'data'):
                         output = decode_header(buffer[:20])
                         n = output['n']
@@ -60,8 +104,11 @@ class SocketClient(object):
                             break
 
                         package = buffer[20:]
+                        q2 = time.time()
                         data = decode_package(package)
-                        print(n, q, data.shape)
+                        if dataset is not None:
+                            dataset.append(n, q, q2, data)
+                        print(n, q, q2, data.shape)
 
             except ConnectionAbortedError as err:
                 logger.error('ConnectionAbortedError occurred')
@@ -80,8 +127,14 @@ class SocketClient(object):
 
 # %%
 if __name__ == '__main__':
+    dataset = DataSet()
+
     client = SocketClient()
     client.connect()
 
+    client.receive(dataset)
+
     input('Press Enter to quit')
+
+    print(dataset.dataframe())
     pass
