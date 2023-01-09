@@ -2,15 +2,26 @@
 import logging
 
 # %%
+# ----------------------------------------------------------------
+# Main setup for signal protocol
 main_setup = dict(
     sample_rate=1000,  # Hz
     interval=40,  # milliseconds
     channels=64,  # channels
 )
 
-server_setup = dict(
+# ----------------------------------------------------------------
+# Signal sender setup
+signal_sender_setup = dict(
     host='localhost',
     port=23333
+)
+
+# ----------------------------------------------------------------
+# Data center setup
+data_center_setup = dict(
+    host='localhost',
+    port=23334
 )
 
 # %%

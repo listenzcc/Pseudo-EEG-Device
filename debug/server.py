@@ -5,7 +5,7 @@ import socket
 import threading
 import traceback
 
-from main_setup import main_setup, server_setup, logger
+from main_setup import main_setup, signal_sender_setup, logger
 
 
 # %%
@@ -16,8 +16,8 @@ class SocketServer(object):
     '''
 
     def __init__(self):
-        self.host = server_setup['host']
-        self.port = server_setup['port']
+        self.host = signal_sender_setup['host']
+        self.port = signal_sender_setup['port']
         self.sessions = []
 
     def start(self):

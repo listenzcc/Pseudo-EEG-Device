@@ -1,9 +1,9 @@
 '''
-File: signal_receiver.py
+File: data_center.py
 Author: listenzcc
 Date: 2023-01-04
 
-The signal receiver of Pseudo EEG Device
+The Data Center of Pseudo EEG Device
 '''
 
 # %%
@@ -13,8 +13,8 @@ import threading
 import traceback
 import pandas as pd
 
-from main_setup import server_setup, logger
-from coding_toolbox import decode_header, decode_package
+from main_setup import signal_sender_setup, logger
+from coding_toolbox import decode_header, decode_body
 
 # %%
 
@@ -62,8 +62,8 @@ class SocketClient(object):
     ''' Socket client for Pseudo EEG Device '''
 
     def __init__(self):
-        self.host = server_setup['host']
-        self.port = server_setup['port']
+        self.host = signal_sender_setup['host']
+        self.port = signal_sender_setup['port']
 
     def connect(self):
         ''' Connect to the server '''
@@ -71,7 +71,7 @@ class SocketClient(object):
         self.client.connect((self.host, self.port))
         logger.info('Connected to {}:{}'.format(self.host, self.port))
 
-    def receive(self, dataset=None):
+    def receiving(self, dataset=None):
         '''
         Keep receiving the data from the server
 
@@ -105,7 +105,7 @@ class SocketClient(object):
 
                         package = buffer[20:]
                         q2 = time.time()
-                        data = decode_package(package)
+                        data = decode_body(package)
                         if dataset is not None:
                             dataset.append(n, q, q2, data)
                         print(n, q, q2, data.shape)
@@ -132,7 +132,7 @@ if __name__ == '__main__':
     client = SocketClient()
     client.connect()
 
-    client.receive(dataset)
+    client.receiving(dataset)
 
     input('Press Enter to quit')
 

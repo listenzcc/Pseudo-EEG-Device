@@ -12,7 +12,7 @@ import socket
 import threading
 import traceback
 
-from main_setup import main_setup, server_setup, logger
+from main_setup import main_setup, signal_sender_setup, logger
 from coding_toolbox import generate_package, encode_header, decode_header
 
 
@@ -24,14 +24,14 @@ class SocketServer(object):
     '''
 
     def __init__(self):
-        self.host = server_setup['host']
-        self.port = server_setup['port']
+        self.host = signal_sender_setup['host']
+        self.port = signal_sender_setup['port']
         self.sessions = []
 
     def start(self):
         ''' Start the server '''
         self.bind()
-        self.handle_sessions()
+        self.handling_sessions()
 
     def bind(self):
         '''
@@ -64,7 +64,7 @@ class SocketServer(object):
             n += session.send(buffer)
         return n
 
-    def handle_sessions(self):
+    def handling_sessions(self):
         '''
         Handling the incoming sessions in a separate threading.
         '''
@@ -151,7 +151,7 @@ class SocketSession(object):
         self.close()
 
 
-class EEG_Device_Signal_Server(object):
+class EEG_Pseudo_Device(object):
     '''
     Automatic signal server for Pseudo EEG device
     '''
@@ -211,7 +211,7 @@ class EEG_Device_Signal_Server(object):
         t = threading.Thread(target=_loop, daemon=True)
         t.start()
 
-    def keep_fill_buffer(self, interval=main_setup['interval']):
+    def keep_filling_buffer(self, interval=main_setup['interval']):
         '''
         Keep fill the buffer at the fixed rate
 
@@ -257,9 +257,9 @@ if __name__ == '__main__':
     server = SocketServer()
     server.start()
 
-    edss = EEG_Device_Signal_Server()
-    edss.keep_fill_buffer()
-    edss.keep_sending_buffer(server)
+    eeg_pd = EEG_Pseudo_Device()
+    eeg_pd.keep_filling_buffer()
+    eeg_pd.keep_sending_buffer(server)
 
     input('Press enter to quit')
 

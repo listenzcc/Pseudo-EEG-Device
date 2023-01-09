@@ -5,7 +5,7 @@ import socket
 import threading
 import traceback
 
-from main_setup import server_setup, logger
+from main_setup import signal_sender_setup, logger
 
 # %%
 
@@ -14,8 +14,8 @@ class SocketClient(object):
     ''' Socket client for Pseudo EEG Device '''
 
     def __init__(self):
-        self.host = server_setup['host']
-        self.port = server_setup['port']
+        self.host = signal_sender_setup['host']
+        self.port = signal_sender_setup['port']
 
     def connect(self):
         ''' Connect to the server '''
@@ -27,51 +27,6 @@ class SocketClient(object):
     def receive(self):
         buffer = self.client.recv(20)
         print(buffer)
-
-    # def receive(self):
-    #     ''' Keep receiving the data from the server '''
-
-    #     self.keep_receiving = True
-
-    #     def _loop():
-    #         logger.info('Start receiving loop')
-
-    #         try:
-    #             while self.keep_receiving:
-    #                 buffer = self.client.recv(1024)
-    #                 if buffer.startswith(b'data'):
-    #                     output = decode_header(buffer[:20])
-    #                     n = output['n']
-    #                     k = output['k']
-    #                     q = output['q']
-
-    #                     logger.debug('Expecting package length: {}'.format(k))
-    #                     while k + 20 > len(buffer):
-    #                         buffer += self.client.recv(min(1024,
-    #                                                        k+20 - len(buffer)))
-
-    #                     if not k + 20 == len(buffer):
-    #                         logger.error(
-    #                             'Received unexpected package with wrong length')
-    #                         break
-
-    #                     package = buffer[20:]
-    #                     data = decode_package(package)
-    #                     print(n, q, data.shape)
-
-    #         except ConnectionAbortedError as err:
-    #             logger.error('ConnectionAbortedError occurred')
-
-    #         except Exception as err:
-    #             logger.error('Unknown error occurs {}'.format(err))
-    #             logger.error(traceback.format_exc())
-
-    #         self.keep_receiving = False
-
-    #         logger.info('Stop receiving loop')
-
-    #     t = threading.Thread(target=_loop, daemon=True)
-    #     t.start()
 
 
 # %%

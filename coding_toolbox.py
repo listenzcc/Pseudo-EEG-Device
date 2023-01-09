@@ -96,9 +96,9 @@ def generate_package(n=0):
     return n, k, q, code, data
 
 
-def decode_package(code):
+def decode_body(code):
     '''
-    Decode the data from the code
+    Decode the data from the body bytes
 
     Args:
         param: code: The decoding code;
@@ -125,7 +125,7 @@ if __name__ == '__main__':
     print(output)
 
     print('---- Decode Check ----')
-    data2 = decode_package(code)
+    data2 = decode_body(code)
     print('The difference values are', np.unique(data - data2))
 
 # %%
