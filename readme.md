@@ -27,7 +27,7 @@ b'data' + (n) + (q) + (k) + (x)
 | Notion | format | Length in bytes | Description                           |
 | ------ | ------ | --------------- | ------------------------------------- |
 | 'data' | 8s     | 8               | The command of data package           |
-| n      | \>H    | 2               | The count of the package              |
+| n      | \>L    | 4               | The count of the package              |
 | k      | \>H    | 2               | The bytes length of the encoded array |
 | q      | \<d    | 8               | The time stamp of the package         |
 | x      | \<i    | k               | The encoded array                     |

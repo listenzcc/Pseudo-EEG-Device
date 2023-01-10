@@ -11,6 +11,7 @@ channels = main_setup['channels']
 interval = main_setup['interval']
 sample_rate = main_setup['sample_rate']
 data_length = int(interval / 1000 * sample_rate)
+header_length = main_setup['header_length']
 
 # %%
 
@@ -24,16 +25,16 @@ def encode_header(n, k, q):
     Encode the header based on n, k, q
 
     Args:
-        param: n: the package id n;
-        param: k: The length of the bytes;
-        param: q: The time stamp of the package;
+        :param: n: the package id n;
+        :param: k: The length of the bytes;
+        :param: q: The time stamp of the package;
 
     Return:
-        return: The encoded header
+        :return: The encoded header
     '''
     segments = [
         struct.pack('8s', b'data'),
-        struct.pack('>H', n),
+        struct.pack('>L', n),
         struct.pack('>H', k),
         struct.pack('<d', q)
     ]
@@ -45,25 +46,25 @@ def decode_header(code):
     Decode the header code
 
     Args:
-        param: code: The given header code;
+        :param: code: The given header code;
 
     Return:
-        return: output: The dict contains:
-                        s: The leading string;
-                        n: the package id n;
-                        k: The length of the bytes;
-                        q: The time stamp of the package;
+        :return: output: The dict contains:
+                         s: The leading string;
+                         n: the package id n;
+                         k: The length of the bytes;
+                         q: The time stamp of the package;
     '''
-    if not len(code) == 20:
+    if not len(code) == header_length:
         logger.error(
             'Invalid header code, expected 20 bytes, but received {} bytes'.format(len(code)))
         return
 
     output = dict(
-        s=struct.unpack('8s', code[:8])[0],
-        n=struct.unpack('>H', code[8:10])[0],
-        k=struct.unpack('>H', code[10:12])[0],
-        q=struct.unpack('<d', code[12:])[0]
+        s=struct.unpack('8s', code[:8])[0],  # 8
+        n=struct.unpack('>L', code[8:12])[0],  # 4
+        k=struct.unpack('>H', code[12:14])[0],  # 2
+        q=struct.unpack('<d', code[14:])[0],  # 8
     )
     return output
 
@@ -79,14 +80,14 @@ def generate_package(n=0):
     Generate the package of the given time (n)
 
     Args:
-        param: n: The idx number of the package;
+        :param: n: The idx number of the package;
 
     Return:
-        return: n: the input n;
-        return: k: The length of the bytes;
-        return: q: The time stamp of the package;
-        return: code: The code of the package in bytes;
-        return: data: The raw data in numpy array.
+        :return: n: the input n;
+        :return: k: The length of the bytes;
+        :return: q: The time stamp of the package;
+        :return: code: The code of the package in bytes;
+        :return: data: The raw data in numpy array.
     '''
     data = np.random.randint(-1000, 1000, (data_length, channels))
     array = data.reshape(np.prod(data.shape)).tolist()
@@ -101,10 +102,10 @@ def decode_body(code):
     Decode the data from the body bytes
 
     Args:
-        param: code: The decoding code;
+        :param: code: The decoding code;
 
     Return:
-        return: data: The decoded data in numpy array.
+        :return: data: The decoded data in numpy array.
     '''
     array_length = data_length * channels
     array = struct.unpack(f'<{array_length}i', code)

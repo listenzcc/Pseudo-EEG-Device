@@ -54,10 +54,10 @@ class SocketServer(object):
         Send the buffer to all the sessions 
 
         Args:
-            param: buffer: The buffer to send
+            :param: buffer: The buffer to send
 
         Return:
-            return: n: How many sessions were sent through
+            :return: n: How many sessions were sent through
         '''
         n = 0
         for session in [e for e in self.sessions if e.is_connected]:
@@ -111,11 +111,11 @@ class SocketSession(object):
         Send bytes to the client
 
         Args:
-            param: buffer: The buffer to send;
-            param: debug: Whether to noise the debug output
+            :param: buffer: The buffer to send;
+            :param: debug: Whether to noise the debug output
 
         Return:
-            return: (int): If the sending was successful, 1 means success, 0 means failure
+            :return: (int): If the sending was successful, 1 means success, 0 means failure
         '''
         try:
             self.client.sendall(buffer)
@@ -126,6 +126,7 @@ class SocketSession(object):
         except Exception as err:
             logger.error('Client sent {} bytes, {}'.format(
                 len(buffer), buffer[:20]))
+            self.close()
             return 0
 
     def listen(self):
@@ -179,11 +180,11 @@ class EEG_Pseudo_Device(object):
             Send the header + code
 
             Args:
-                param: header: The header to send;
-                param: code: The code to send
+                :param: header: The header to send;
+                :param: code: The code to send
 
             Return:
-                return: n: How many sessions were sent thought
+                :return: n: How many sessions were sent thought
             '''
             output = decode_header(header)
             n = -1
@@ -216,7 +217,7 @@ class EEG_Pseudo_Device(object):
         Keep fill the buffer at the fixed rate
 
         Args:
-            param: interval: The interval between the filling events in milliseconds
+            :param: interval: The interval between the filling events in milliseconds
         '''
 
         def _fill_buffer():

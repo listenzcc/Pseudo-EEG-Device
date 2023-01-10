@@ -8,6 +8,7 @@ main_setup = dict(
     sample_rate=1000,  # Hz
     interval=40,  # milliseconds
     channels=64,  # channels
+    header_length=22,  # header length
 )
 
 # ----------------------------------------------------------------

@@ -7,55 +7,69 @@ The Data Center of Pseudo EEG Device
 '''
 
 # %%
+import json
 import time
 import socket
 import threading
 import traceback
 import pandas as pd
 
-from main_setup import signal_sender_setup, logger
+import asyncio
+import websockets
+
+from main_setup import main_setup, signal_sender_setup, data_center_setup, logger
 from coding_toolbox import decode_header, decode_body
+from eeg_data_set import DataSet
+
+# %%
+dataset = DataSet()
 
 # %%
 
 
-class DataSet(object):
-    ''' Main dataset of the Pseudo EEG Device Signal '''
-
+class WebsocketServer(object):
     def __init__(self):
-        self.reset()
+        pass
 
-    def reset(self):
-        ''' Reset the dataset '''
-        self.dataset = []
-
-    def append(self, n, q, q2, data):
+    async def handle(self, websocket, path):
         '''
-        Append the signal into the dataset
+        Handle message from the client, it is an async function.
 
         Args:
-            param: n: The count of the signal segment;
-            param: q: The timestamp of the signal segment;
-            param: q2: The timestamp of receiving the signal segment
-            param: data: The 2D array of the signal segment
+            :param: websocket: The websocket connection;
+            :param: path: The request path.
         '''
-        self.dataset.append((n, q, q2, data))
+        def _send(bytes):
+            return websocket.send(bytes)
 
-    def dataframe(self):
+        logger.debug('Received message: {}'.format(path))
+
+        msg = await websocket.recv()
+
+        df = dataset.get_latest(int(msg))
+
+        await _send(df.to_json())
+
+        return
+
+    def start(self, host=None, port=None):
         '''
-        Convert the dataset into the dataframe
+        Start websocket server, it is an async function.
 
-        Return:
-            return: df: The dataframe of the dataset
+        Args:
+            :param: host: The hostname of the websocket server;
+            :param: port: The port of the websocket server.
         '''
-        df = pd.DataFrame(self.dataset, columns=['n', 'q', 'q2', 'data'])
-        df['diff'] = df['q2'] - df['q']
-
-        df = df[['n', 'diff', 'q', 'q2', 'data']]
-        return df
+        host = data_center_setup['host']
+        port = data_center_setup['port']
+        async_server = websockets.serve(self.handle, host, port)
+        asyncio.get_event_loop().run_until_complete(async_server)
+        asyncio.get_event_loop().run_forever()
 
 
 # %%
+
+HEADER_LENGTH = main_setup['header_length']
 
 
 class SocketClient(object):
@@ -88,27 +102,28 @@ class SocketClient(object):
                 while self.keep_receiving:
                     buffer = self.client.recv(80)
                     if buffer.startswith(b'data'):
-                        output = decode_header(buffer[:20])
+                        output = decode_header(
+                            buffer[:HEADER_LENGTH])
                         n = output['n']
                         k = output['k']
                         q = output['q']
 
                         logger.debug('Expecting package length: {}'.format(k))
-                        while k + 20 > len(buffer):
+                        while k + HEADER_LENGTH > len(buffer):
                             buffer += self.client.recv(min(1024,
-                                                           k+20 - len(buffer)))
+                                                           k+HEADER_LENGTH - len(buffer)))
 
-                        if not k + 20 == len(buffer):
+                        if not k + HEADER_LENGTH == len(buffer):
                             logger.error(
                                 'Received unexpected package with wrong length')
                             break
 
-                        package = buffer[20:]
+                        package = buffer[HEADER_LENGTH:]
                         q2 = time.time()
                         data = decode_body(package)
                         if dataset is not None:
                             dataset.append(n, q, q2, data)
-                        print(n, q, q2, data.shape)
+                        print(n, q, q2, data.shape, data[0][0])
 
             except ConnectionAbortedError as err:
                 logger.error('ConnectionAbortedError occurred')
@@ -127,14 +142,17 @@ class SocketClient(object):
 
 # %%
 if __name__ == '__main__':
-    dataset = DataSet()
+    try:
+        client = SocketClient()
+        client.connect()
+        client.receiving(dataset)
+    except:
+        print('!!! Can not connect to server !!!')
 
-    client = SocketClient()
-    client.connect()
-
-    client.receiving(dataset)
+    ws = WebsocketServer()
+    ws.start()
 
     input('Press Enter to quit')
 
-    print(dataset.dataframe())
+    print(dataset.get_latest())
     pass
