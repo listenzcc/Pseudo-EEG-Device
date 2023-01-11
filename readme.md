@@ -1,12 +1,34 @@
 # EEG Pseudo Device
 
+It is an EEG system from signal generating to signal displaying.
+
 ---
 
 - [EEG Pseudo Device](#eeg-pseudo-device)
-  - [Protocol](#protocol)
-  - [Format rules](#format-rules)
+  - [Components](#components)
+  - [Coding Rules](#coding-rules)
+    - [Protocol](#protocol)
+    - [Format rules](#format-rules)
 
-## Protocol
+## Components
+
+Pseudo EEG device: [signal_sender.py](./signal_sender.py),
+it works as a recording EEG collector,
+it establishes the EEG signal service,
+and broadcasts signals to the connected clients.
+
+EEG data center: [data_center.py](./data_center.py),
+it connects to the EEG device,
+and it receives the EEG signal in real-time.
+Moreover, it establishes the data center service.
+
+EEG explorer: [index.html](./web/index.html),
+it connects to the data center service,
+and it displays the signals in real-time.
+
+## Coding Rules
+
+### Protocol
 
 Commands:
 
@@ -32,7 +54,7 @@ b'data' + (n) + (q) + (k) + (x)
 | q      | \<d    | 8               | The time stamp of the package         |
 | x      | \<i    | k               | The encoded array                     |
 
-## Format rules
+### Format rules
 
 The optional first format char indicates byte order, size and alignment:
 
